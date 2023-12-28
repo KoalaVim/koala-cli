@@ -17,3 +17,7 @@ koala = "koala_cli.__main__:app"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+skip-string-normalization = true
+target-version = ['py38']
