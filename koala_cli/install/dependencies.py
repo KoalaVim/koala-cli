@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from .installers import get_nerdfont, install_neovim, install_nerdfont
+
 pkgs = [
     "fd",
     "ripgrep",
@@ -10,8 +12,11 @@ pkgs = [
 ]
 
 binaries = {
-    "neovim/neovim": None,
-    "ryanoasis/nerd-fonts": "func:get_nerdfont_name",
+    "neovim/neovim": {"installer": install_neovim},
+    "ryanoasis/nerd-fonts": {
+        "format": get_nerdfont,
+        "installer": install_nerdfont,
+    },
 }
 
 terminals = {
@@ -29,13 +34,19 @@ terminals = {
 overrides_by_os = {
     "linux": {
         "apt": {},
-        "neovim/neovim": "linux64.tar.gz",
+        "neovim/neovim": {
+            "format": "linux64.tar.gz",
+        },
     },
     "mac": {
         "brew": {},
-        "neovim/neovim": "macos.tar.gz",
+        "neovim/neovim": {
+            "format": "macos.tar.gz",
+        },
     },
     "windows": {
-        "neovim/neovim": "win64.zip",
+        "neovim/neovim": {
+            "format": "win64.zip",
+        },
     },
 }

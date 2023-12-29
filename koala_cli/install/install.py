@@ -91,16 +91,15 @@ def get_github_release(name: str, version="latest") -> str:
         f"https://api.github.com/repos/{owner}/{repo}/releases/{version}"
     )
 
-    binary_format = binaries[name]
+    binary_format = binaries[name].get("format")
     if binary_format is None:
-        binary_format = overrides_by_os[_get_os()].get(name)
+        binary_format = overrides_by_os[_get_os()].get(name).get("format")
 
     if binary_format is None:
         raise ValueError(f"binary format of `{name}` doesn't exist for `{_get_os()}`")
 
-    if binary_format.startswith("func:"):
-        func_to_call = binary_format.replace("func:", "")
-        binary_format = globals()[func_to_call]()
+    if callable(binary_format):
+        binary_format = binary_format()
 
     assets = response.json()["assets"]
     for asset in assets:
