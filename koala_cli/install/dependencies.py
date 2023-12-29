@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 
-dependencies = [
-    "neovim",
+pkgs = [
     "fd",
-    "nerdfont",
     "ripgrep",
     "fzf",
     "npm",
     # cargo?
     # TODO: treesitter-cli https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md
 ]
+
+binaries = {
+    "neovim/neovim": None,
+    "ryanoasis/nerd-fonts": "func:get_nerdfont_name",
+}
 
 terminals = {
     "kitty": {
@@ -26,6 +29,13 @@ terminals = {
 overrides_by_os = {
     "linux": {
         "apt": {},
+        "neovim/neovim": "linux64.tar.gz",
     },
-    "mac": {"brew": {}},
+    "mac": {
+        "brew": {},
+        "neovim/neovim": "macos.tar.gz",
+    },
+    "windows": {
+        "neovim/neovim": "win64.zip",
+    },
 }
