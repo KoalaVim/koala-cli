@@ -4,11 +4,11 @@ from pathlib import Path
 
 
 def install_neovim(file: Path):
-    print(file)
+    print(f"install neovim {file}")
 
 
 def install_nerdfont(file: Path):
-    print(file)
+    print(f"install nerdfont {file}")
 
 
 def get_nerdfont() -> str:

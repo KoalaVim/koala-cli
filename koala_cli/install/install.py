@@ -3,12 +3,17 @@
 import subprocess
 import platform
 import requests
+import urllib.request
+import tempfile
+import os
 
-from typing import Optional
-import typer
-from .dependencies import pkgs, binaries, overrides_by_os
+from pathlib import Path
+from typing import Any, Callable, Optional, List
 from typing_extensions import Annotated
-from typing import List
+
+import typer
+
+from .dependencies import pkgs, binaries, overrides_by_os
 
 app = typer.Typer(help="Install KoalaVim and dependencies")
 
@@ -48,7 +53,8 @@ def install_pkgs(pkg_names: List[str], pkg_manager: str, sudo: bool, dry_run: bo
 
 def install_binary(name: str, dry_run: bool):
     release = get_github_release(name)
-    print(release)
+    installer = get_bin_attr(name, "installer")
+    download_and_install(release, installer, dry_run)
     return
 
 
@@ -91,13 +97,7 @@ def get_github_release(name: str, version="latest") -> str:
         f"https://api.github.com/repos/{owner}/{repo}/releases/{version}"
     )
 
-    binary_format = binaries[name].get("format")
-    if binary_format is None:
-        binary_format = overrides_by_os[_get_os()].get(name).get("format")
-
-    if binary_format is None:
-        raise ValueError(f"binary format of `{name}` doesn't exist for `{_get_os()}`")
-
+    binary_format = get_bin_attr(name, "format")
     if callable(binary_format):
         binary_format = binary_format()
 
@@ -111,8 +111,15 @@ def get_github_release(name: str, version="latest") -> str:
     )
 
 
-def get_nerdfont_name() -> str:
-    return "CascadiaCode.tar.xz"
+def get_bin_attr(name: str, attr: str) -> Any:
+    res = binaries[name].get(attr)
+    if res is None:
+        res = overrides_by_os[_get_os()].get(name).get(attr)
+
+    if res is None:
+        raise ValueError(f"`{attr}` of `{name}` doesn't exist for `{_get_os()}`")
+
+    return res
 
 
 def _get_os() -> str:
@@ -123,3 +130,12 @@ def _get_os() -> str:
         return "mac"
     elif system == "Windows":
         return "windows"
+
+
+def download_and_install(url: str, installer: Callable, dry_run: bool) -> Path:
+    with tempfile.TemporaryDirectory() as tmpdir_path:
+        output_path = Path(tmpdir_path) / Path(os.path.basename(url))
+        print(f"Downloading '{url}' to '{output_path}'")
+        if not dry_run:
+            urllib.request.urlretrieve(url, output_path)
+            installer(output_path)
