@@ -52,7 +52,8 @@ def install_pkgs(pkg_names: List[str], pkg_manager: str, sudo: bool, dry_run: bo
 
 
 def install_binary(name: str, dry_run: bool):
-    release = get_github_release(name)
+    version = get_bin_attr(name, "version", "latest")
+    release = get_github_release(name, version=version)
     installer = get_bin_attr(name, "installer")
     download_and_install(release, installer, dry_run)
     return
@@ -93,15 +94,26 @@ def is_executable_available(executable: str) -> bool:
 
 def get_github_release(name: str, version="latest") -> str:
     owner, repo = name.split("/")
+    if version == "latest":
+        version_url = "latest"
+    else:
+        version_url = f"tags/{version}"
+
     response = requests.get(
-        f"https://api.github.com/repos/{owner}/{repo}/releases/{version}"
+        f"https://api.github.com/repos/{owner}/{repo}/releases/{version_url}"
     )
 
     binary_format = get_bin_attr(name, "format")
     if callable(binary_format):
         binary_format = binary_format()
 
-    assets = response.json()["assets"]
+    try:
+        assets = response.json()["assets"]
+    except KeyError:
+        raise ValueError(
+            f"Failed to find assets for `{owner}/{repo}` version: {version}"
+        )
+
     for asset in assets:
         if binary_format in asset["name"]:
             return asset["browser_download_url"]
@@ -111,12 +123,16 @@ def get_github_release(name: str, version="latest") -> str:
     )
 
 
-def get_bin_attr(name: str, attr: str) -> Any:
+def get_bin_attr(name: str, attr: str, default: Optional[Any] = None) -> Any:
     res = binaries[name].get(attr)
     if res is None:
-        res = overrides_by_os[_get_os()].get(name).get(attr)
+        bin_os = overrides_by_os[_get_os()].get(name)
+        if bin_os:
+            res = bin_os.get(attr)
 
     if res is None:
+        if default is not None:
+            return default
         raise ValueError(f"`{attr}` of `{name}` doesn't exist for `{_get_os()}`")
 
     return res

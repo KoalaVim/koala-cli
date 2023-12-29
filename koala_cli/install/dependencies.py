@@ -12,7 +12,10 @@ pkgs = [
 ]
 
 binaries = {
-    "neovim/neovim": {"installer": install_neovim},
+    "neovim/neovim": {
+        "installer": install_neovim,
+        "version": "v0.9.2",
+    },
     "ryanoasis/nerd-fonts": {
         "format": get_nerdfont,
         "installer": install_nerdfont,
