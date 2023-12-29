@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 from typing import Any, Callable, Optional, List
 from typing_extensions import Annotated
+from contextlib import ExitStack
 
 import typer
 
@@ -28,13 +29,17 @@ def install(
             help="Install dependencies as binaries rather via package manager"
         ),
     ] = False,
+    keep: Annotated[
+        bool,
+        typer.Option(help="Keep temporary directories"),
+    ] = False,
 ):
     if as_binaries:
         print("Not support yet, sorry :(")
         return typer.Exit(1)
 
     for binary in binaries:
-        install_binary(binary, dry_run)
+        install_binary(binary, dry_run, keep)
 
     install_pkgs(pkgs, get_os_pkg_manger(), sudo, dry_run)
 
@@ -51,11 +56,11 @@ def install_pkgs(pkg_names: List[str], pkg_manager: str, sudo: bool, dry_run: bo
     # subprocess.check_output()
 
 
-def install_binary(name: str, dry_run: bool):
+def install_binary(name: str, dry_run: bool, keep: bool):
     version = get_bin_attr(name, "version", "latest")
     release = get_github_release(name, version=version)
     installer = get_bin_attr(name, "installer")
-    download_and_install(release, installer, dry_run)
+    download_and_install(release, installer, dry_run, keep)
     return
 
 
@@ -148,9 +153,17 @@ def _get_os() -> str:
         return "windows"
 
 
-def download_and_install(url: str, installer: Callable, dry_run: bool) -> Path:
-    with tempfile.TemporaryDirectory() as tmpdir_path:
-        output_path = Path(tmpdir_path) / Path(os.path.basename(url))
+def download_and_install(
+    url: str, installer: Callable, dry_run: bool, keep: bool
+) -> Path:
+
+    with ExitStack() as stack:
+        if keep:
+            dir = tempfile.mkdtemp(prefix="koala_")
+        else:
+            dir = stack.enter_context(tempfile.TemporaryDirectory(prefix="koala_"))
+
+        output_path = Path(dir) / Path(os.path.basename(url))
         print(f"Downloading '{url}' to '{output_path}'")
         if not dry_run:
             urllib.request.urlretrieve(url, output_path)
