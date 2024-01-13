@@ -24,6 +24,7 @@ def update(
     force: Annotated[
         bool, typer.Option(help="Force update (ignore dirty KoalaVim dir)")
     ] = False,
+    restore: Annotated[bool, typer.Option(help="Run lazy restore automatically")] = True,
 ):
     console = Console()
 
@@ -31,7 +32,7 @@ def update(
     if repo.is_dirty():
         console.print("Local KoalaVim dir is dirty", style=Style(color="yellow"))
         if not force:
-            return
+            raise typer.Exit(1)
 
     repo.remote(remote).fetch()
 
@@ -46,6 +47,10 @@ def update(
     backup_current_lockfile()
     console.print("Overwriting lockfile", style=Style(color="green"))
     _overwrite_lock_file(kvim_lockfile(), user_lockfile(), yes=True)
+
+    if not restore:
+        return
+
     return _lazy_restore()
 
 
