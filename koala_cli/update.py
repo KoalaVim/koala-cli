@@ -31,7 +31,7 @@ def update(
     if repo.is_dirty():
         console.print("Local KoalaVim dir is dirty", style=Style(color="yellow"))
         if not force:
-            return
+            raise typer.Exit(1)
 
     repo.remote(remote).fetch()
 

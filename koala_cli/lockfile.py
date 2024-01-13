@@ -144,7 +144,7 @@ def _lazy_restore() -> typer.Exit:
         console.print(f"Output: {err.decode()}\n")
         console.print(f"Exception: {e}")
 
-        return typer.Exit(1)
+        raise typer.Exit(1)
 
     try:
         if len(res["plugins"]) > 0:
@@ -157,7 +157,7 @@ def _lazy_restore() -> typer.Exit:
                 console.print(plugin, style=Style(bold=True, underline=True))
                 console.print(f"Error: {error}\n")
 
-            return typer.Exit(1)
+            raise typer.Exit(1)
 
         console.print(
             " >> Finished successfully. Restart nvim to take effect",
@@ -171,4 +171,4 @@ def _lazy_restore() -> typer.Exit:
         )
         console.print(f"Key {e} doesn't exist in {res}")
 
-        return typer.Exit(1)
+        raise typer.Exit(1)
