@@ -48,7 +48,7 @@ def update(
     if m is None:
         target = remote + "/" + target
 
-    console.print(f"Resetting to: {target}")
+    console.print(f"Resetting KoalaVim repo to: {target}")
     repo.head.reset(commit=target, working_tree=True)
 
     backup_current_lockfile()
