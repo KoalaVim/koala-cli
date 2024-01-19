@@ -7,7 +7,12 @@ from rich.console import Console
 from rich.style import Style
 from typing_extensions import Annotated
 
-from koala_cli.lockfile import kvim_lockfile, user_lockfile, _overwrite_lock_file, _lazy_restore
+from koala_cli.lockfile import (
+    kvim_lockfile,
+    user_lockfile,
+    _overwrite_lock_file,
+    _lazy_restore,
+)
 from koala_cli.utils import data_dir, kvim_repo
 
 import typer
@@ -24,7 +29,9 @@ def update(
     force: Annotated[
         bool, typer.Option(help="Force update (ignore dirty KoalaVim dir)")
     ] = False,
-    restore: Annotated[bool, typer.Option(help="Run lazy restore automatically")] = True,
+    restore: Annotated[
+        bool, typer.Option(help="Run lazy restore automatically")
+    ] = True,
 ):
     console = Console()
 
