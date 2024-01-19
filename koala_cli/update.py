@@ -12,8 +12,10 @@ from koala_cli.lockfile import (
     user_lockfile,
     _overwrite_lock_file,
     _lazy_restore,
+    read_lockfile,
+    get_lockfile_diff,
 )
-from koala_cli.utils import data_dir, kvim_repo
+from koala_cli.utils import config_dir, data_dir, kvim_repo, kvim_dir
 
 import typer
 
@@ -31,6 +33,9 @@ def update(
     ] = False,
     restore: Annotated[
         bool, typer.Option(help="Run lazy restore automatically")
+    ] = True,
+    partial: Annotated[
+        bool, typer.Option(help="Run update and restore only for updated plugins")
     ] = True,
 ):
     console = Console()
@@ -58,7 +63,16 @@ def update(
     if not restore:
         return
 
-    return _lazy_restore()
+    if not partial:
+        return _lazy_restore()
+
+    user_lockfile_dict = read_lockfile(config_dir())
+    kvim_lockfile_dict = read_lockfile(kvim_dir())
+    plugins_to_restore = get_lockfile_diff(
+        user_lockfile_dict, kvim_lockfile_dict
+    ).keys()
+
+    return _lazy_restore(list(plugins_to_restore))
 
 
 def backup_current_lockfile():

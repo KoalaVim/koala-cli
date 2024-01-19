@@ -1,4 +1,5 @@
 import subprocess
+from typing import List, NamedTuple
 
 import typer
 import json
@@ -11,29 +12,29 @@ from rich.prompt import Confirm
 from rich.style import Style
 
 from koala_cli.utils import kvim_dir, config_dir
+from typing import Dict
 
 app = typer.Typer(no_args_is_help=True, help="Manage plugin's lockfile")
 
 
 @app.command()
-def diff():
+def diff(
+    filter_missing: Annotated[bool, typer.Option(help='Filter missing plugins')] = False
+):
     """
     Show differences of user lock-file from Koala's lock-file
     """
     kvim_lockfile = read_lockfile(kvim_dir())
     user_lockfile = read_lockfile(config_dir())
+    lockfile_diff = get_lockfile_diff(user_lockfile, kvim_lockfile, filter_missing)
 
-    table = Table(title='Lock File Diff')
-    table.add_column('Name', style='medium_purple3')
-    table.add_column('User', style='green')
-    table.add_column('KoalaVim', style="cyan")
+    table = Table(title="Lock File Diff")
+    table.add_column("Name", style="medium_purple3")
+    table.add_column("User", style="green")
+    table.add_column("KoalaVim", style="cyan")
 
-    for plugin, kvim_commit in kvim_lockfile.items():
-        if plugin == 'KoalaVim':
-            continue  # The user can't never be in the correct commit
-        user_commit = user_lockfile.get(plugin, "[grey35]N/A")
-        if kvim_commit != user_commit:
-            table.add_row(plugin, user_commit, kvim_commit)
+    for plugin, (user_commit, kvim_commit) in lockfile_diff.items():
+        table.add_row(plugin, user_commit, kvim_commit)
 
     console = Console()
     console.print(table)
@@ -113,7 +114,33 @@ def read_lockfile(path: Path) -> dict:
         return plugin_to_commit
 
 
-def _lazy_restore() -> typer.Exit:
+Plugin = str
+
+
+class Diff(NamedTuple):
+    old: str
+    right: str
+
+
+MISSING_PLUGIN = "[grey35]N/A"
+
+
+def get_lockfile_diff(old: dict, new: dict, filter_missing=True) -> Dict[Plugin, Diff]:
+    diffs = {}
+    for plugin, new_commit in new.items():
+        if plugin == "KoalaVim":
+            continue  # The user can't never be in the correct commit
+        old_commit = old.get(plugin, MISSING_PLUGIN)
+        if filter_missing:
+            if old_commit == MISSING_PLUGIN:
+                continue
+        if old_commit != new_commit:
+            diffs[plugin] = (old_commit, new_commit)
+
+    return diffs
+
+
+def _lazy_restore(plugins: List[str] = None) -> typer.Exit:
     console = Console()
     console.print("")
     console.print(
@@ -121,8 +148,12 @@ def _lazy_restore() -> typer.Exit:
         style=Style(color="bright_yellow", bold=True),
     )
 
+    args = ["nvim", "--headless", "+LazyRestoreLogged"]
+    if plugins is not None:
+        args = args + plugins
+
     process = subprocess.Popen(
-        ["nvim", "--headless", "+LazyRestoreLogged", "+qa"],
+        args + ["+qa"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
@@ -138,7 +169,7 @@ def _lazy_restore() -> typer.Exit:
 
     except json.JSONDecodeError as e:
         console.print(
-            f"Failed to decode restore output!",
+            "Failed to decode restore output!",
             style=Style(color="bright_red", bold=True),
         )
         console.print(f"Output: {err.decode()}\n")
