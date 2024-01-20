@@ -180,7 +180,7 @@ def _lazy_restore(plugins: List[str] = None) -> typer.Exit:
     try:
         if len(res["plugins"]) > 0:
             console.print(
-                f"`:Lazy restore` finished with errors!",
+                "`:Lazy restore` finished with errors!",
                 style=Style(color="bright_red", bold=True),
             )
             console.print("")
