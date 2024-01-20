@@ -28,10 +28,10 @@ def diff(
     user_lockfile = read_lockfile(config_dir())
     lockfile_diff = get_lockfile_diff(user_lockfile, kvim_lockfile, filter_missing)
 
-    table = Table(title="Lock File Diff")
-    table.add_column("Name", style="medium_purple3")
-    table.add_column("User", style="green")
-    table.add_column("KoalaVim", style="cyan")
+    table = Table(title='Lock File Diff')
+    table.add_column('Name', style='medium_purple3')
+    table.add_column('User', style='green')
+    table.add_column('KoalaVim', style="cyan")
 
     for plugin, (user_commit, kvim_commit) in lockfile_diff.items():
         table.add_row(plugin, user_commit, kvim_commit)
