@@ -35,7 +35,7 @@ def update(
         bool, typer.Option(help="Run lazy restore automatically")
     ] = True,
     partial: Annotated[
-        bool, typer.Option(help="Run update and restore only for updated plugins")
+        bool, typer.Option(help="Run lazy restore only for updated plugins")
     ] = True,
 ):
     console = Console()
