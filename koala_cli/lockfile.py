@@ -140,20 +140,33 @@ def get_lockfile_diff(old: dict, new: dict, filter_missing=False) -> Dict[Plugin
     return diffs
 
 
-def _lazy_restore(plugins: List[str] = None) -> typer.Exit:
+def _lazy_restore(lockfile_diff: Dict[Plugin, Diff] = {}) -> typer.Exit:
     console = Console()
     console.print("")
     console.print(
-        " >> Running `:Lazy restore` (sync plugin versions according to user's lockfile)",
+        ">> Running `:Lazy restore` (sync plugin versions according to user's lockfile)",
         style=Style(color="bright_yellow", bold=True),
     )
 
-    args = ["nvim", "--headless", "+LazyRestoreLogged"]
-    if plugins is not None:
-        args = args + plugins
+    cmd = ["+LazyRestoreLogged"]
+    plugins = list(lockfile_diff.keys())
+
+    if len(plugins) > 0:
+        cmd = [" ".join(cmd + plugins)]
+
+        console.print(
+            ">> Running restore for the following plugins:\n",
+            style=Style(color="bright_yellow", bold=True),
+        )
+        for plugin, (old_commit, new_commit) in lockfile_diff.items():
+            console.print(f"{plugin}: {old_commit[:8]} -> {new_commit[:8]}\n")
+    else:
+        console.print(
+            ">> Updating all plugins..", style=Style(color="bright_yellow", bold=True)
+        )
 
     process = subprocess.Popen(
-        args + ["+qa"],
+        ["nvim", "--headless"] + cmd + ["+qa"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
@@ -180,10 +193,10 @@ def _lazy_restore(plugins: List[str] = None) -> typer.Exit:
     try:
         if len(res["plugins"]) > 0:
             console.print(
-                "`:Lazy restore` finished with errors!",
+                "`:Lazy restore` finished with errors!\n",
                 style=Style(color="bright_red", bold=True),
             )
-            console.print("")
+
             for plugin, error in res["plugins"].items():
                 console.print(plugin, style=Style(bold=True, underline=True))
                 console.print(f"Error: {error}\n")
