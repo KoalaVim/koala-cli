@@ -53,8 +53,25 @@ def update(
     if m is None:
         target = remote + "/" + target
 
-    console.print(f"Resetting KoalaVim repo to: {target}")
+    console.print(
+        f">> Resetting KoalaVim repo to: {target}",
+        style=Style(color='bright_yellow', bold=True),
+    )
     repo.head.reset(commit=target, working_tree=True)
+
+    user_lockfile_dict = read_lockfile(config_dir())
+    kvim_lockfile_dict = read_lockfile(kvim_dir())
+    lockfile_diff = get_lockfile_diff(
+        user_lockfile_dict, kvim_lockfile_dict, filter_missing=True
+    )
+
+    if len(lockfile_diff.keys()) == 0:
+        # No plugins to update
+        console.print(
+            'No restore needed. All plugins are up to date',
+            style=Style(color='bright_green', bold=True),
+        )
+        return
 
     backup_current_lockfile()
     console.print("Overwriting lockfile", style=Style(color="green"))
@@ -66,13 +83,7 @@ def update(
     if not partial:
         return _lazy_restore()
 
-    user_lockfile_dict = read_lockfile(config_dir())
-    kvim_lockfile_dict = read_lockfile(kvim_dir())
-    plugins_to_restore = get_lockfile_diff(
-        user_lockfile_dict, kvim_lockfile_dict
-    ).keys()
-
-    return _lazy_restore(list(plugins_to_restore))
+    return _lazy_restore(lockfile_diff)
 
 
 def backup_current_lockfile():
