@@ -125,7 +125,7 @@ class Diff(NamedTuple):
 MISSING_PLUGIN = "[grey35]N/A"
 
 
-def get_lockfile_diff(old: dict, new: dict, filter_missing=True) -> Dict[Plugin, Diff]:
+def get_lockfile_diff(old: dict, new: dict, filter_missing=False) -> Dict[Plugin, Diff]:
     diffs = {}
     for plugin, new_commit in new.items():
         if plugin == "KoalaVim":
