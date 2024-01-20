@@ -119,7 +119,7 @@ Plugin = str
 
 class Diff(NamedTuple):
     old: str
-    right: str
+    new: str
 
 
 MISSING_PLUGIN = "[grey35]N/A"
