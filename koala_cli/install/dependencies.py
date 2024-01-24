@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from typing import Dict
 from .installers import get_nerdfont, install_neovim, install_nerdfont
 
 pkgs = [
@@ -11,7 +12,7 @@ pkgs = [
     # TODO: treesitter-cli https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md
 ]
 
-binaries = {
+binaries: Dict[str, Dict] = {
     "neovim/neovim": {
         "installer": install_neovim,
         "version": "v0.9.2",
@@ -34,7 +35,7 @@ terminals = {
     },
 }
 
-overrides_by_os = {
+overrides_by_os: Dict[str, Dict] = {
     "linux": {
         "apt": {},
         "neovim/neovim": {

@@ -10,6 +10,7 @@ python = "^3.8"
 typer = {extras = ["all"], version = "^0.9.0"}
 gitpython = "^3.1.40"
 typing-extensions = "^4.9.0"
+patool = "^2.1.0"
 
 [tool.poetry.scripts]
 koala = "koala_cli.__main__:app"
