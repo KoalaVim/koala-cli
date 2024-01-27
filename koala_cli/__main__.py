@@ -1,5 +1,10 @@
 import typer
 
+import logging.config
+
+logging.config.dictConfig({'version': 1, 'disable_existing_loggers': True})
+
+
 from koala_cli import install, update, lockfile, health
 from koala_cli.utils import data_dir
 

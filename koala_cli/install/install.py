@@ -11,11 +11,12 @@ import string
 import random
 
 from pathlib import Path
-from typing import Any, Iterator, Optional, List
+from typing import Any, Callable, Iterator, Optional, List
 from typing_extensions import Annotated
 from contextlib import ExitStack, contextmanager
 from rich.console import Console
 from rich.style import Style
+from rich.progress import Progress
 
 import typer
 
@@ -150,7 +151,7 @@ def get_github_release(name: str, version="latest") -> str:
         assets = response.json()["assets"]
     except KeyError:
         raise ValueError(
-            f"Failed to find assets for `{owner}/{repo}` version: {version}"
+            f"Failed to find assets for `{owner}/{repo}` version: {version}, response: {response.json()}"
         )
 
     for asset in assets:
@@ -197,23 +198,42 @@ def download_and_install(
     dry_run: bool,
     skip_download: bool,
 ):
-    console = Console()
-    console.rule(name)
+    c = Console()
+    c.rule(style=Style(color='deep_pink3'))
 
     with temp_dir(str(base_dir / name), True, True) as download_dir:
         output_path = Path(download_dir) / Path(os.path.basename(url))
-        if not skip_download or True:
-            console.print(
-                f"Downloading from [cyan]{url}[green] to [yellow]{output_path}",
-                style=Style(color="green"),
+        if not skip_download:
+            c.print(
+                f"[bright_magenta]Downloading [deep_pink3]{name} from [cyan]{url}[green]"
             )
         if not dry_run:
             if not skip_download:
-                # TODO: add progress bar
-                urllib.request.urlretrieve(url, output_path)
+                with download_progress_bar() as reporthook:
+                    urllib.request.urlretrieve(url, output_path, reporthook=reporthook)
+
+                c.print(f"[dark_olive_green2]Finished! placed at [yellow]{output_path}")
 
             out_dir = extract_if_needed(str(output_path))
-            installer(console, out_dir)
+            installer(c, out_dir)
+
+
+@contextmanager
+def download_progress_bar() -> Iterator[Callable[[int, int, int], None]]:
+    try:
+        with Progress() as progress:
+
+            def _update(i, chunk_size, total_size):
+                if total_size is not None and _update.task is None:
+                    _update.task = progress.add_task('', total=total_size)
+
+                if _update.task is not None:
+                    progress.update(_update.task, advance=i * chunk_size)
+
+            _update.task = None
+            yield _update
+    finally:
+        pass
 
 
 @contextmanager
