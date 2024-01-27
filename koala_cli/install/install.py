@@ -11,13 +11,16 @@ import string
 import random
 
 from pathlib import Path
-from typing import Any, Callable, Optional, List
+from typing import Any, Iterator, Optional, List
 from typing_extensions import Annotated
 from contextlib import ExitStack, contextmanager
+from rich.console import Console
+from rich.style import Style
 
 import typer
 
 from .dependencies import pkgs, binaries, overrides_by_os
+from .installers import Installer
 
 app = typer.Typer(help="Install KoalaVim and dependencies")
 
@@ -81,13 +84,14 @@ def install_binary(
     version = get_bin_attr(full_name, "version", "latest")
     release = get_github_release(full_name, version=version)
     installer = get_bin_attr(full_name, "installer")
+    skip_download = True if skip_download_dir else False
     download_and_install(
         full_name.split('/')[1],
         base_dir,
         release,
         installer,
         dry_run,
-        skip_download_dir,
+        skip_download,
     )
     return
 
@@ -189,24 +193,31 @@ def download_and_install(
     name: str,
     base_dir: Path,
     url: str,
-    installer: Callable,
+    installer: Installer,
     dry_run: bool,
     skip_download: bool,
 ):
+    console = Console()
+    console.rule(name)
+
     with temp_dir(str(base_dir / name), True, True) as download_dir:
         output_path = Path(download_dir) / Path(os.path.basename(url))
-        if not skip_download:
-            print(f"Downloading '{url}' to '{output_path}'")
+        if not skip_download or True:
+            console.print(
+                f"Downloading from [cyan]{url}[green] to [yellow]{output_path}",
+                style=Style(color="green"),
+            )
         if not dry_run:
             if not skip_download:
+                # TODO: add progress bar
                 urllib.request.urlretrieve(url, output_path)
 
             out_dir = extract_if_needed(str(output_path))
-            installer(out_dir)
+            installer(console, out_dir)
 
 
 @contextmanager
-def temp_dir(prefix: str, named: bool, keep: bool) -> Path:
+def temp_dir(prefix: str, named: bool, keep: bool) -> Iterator[Path]:
     if named:
         kw_args = {'dir': prefix}
     else:
