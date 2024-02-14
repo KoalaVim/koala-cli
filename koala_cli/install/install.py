@@ -209,31 +209,27 @@ def download_and_install(
             )
         if not dry_run:
             if not skip_download:
-                with download_progress_bar() as reporthook:
-                    urllib.request.urlretrieve(url, output_path, reporthook=reporthook)
-
+                download(url, output_path)
                 c.print(f"[dark_olive_green2]Finished! placed at [yellow]{output_path}")
 
             out_dir = extract_if_needed(str(output_path))
             installer(c, out_dir)
 
 
-@contextmanager
-def download_progress_bar() -> Iterator[Callable[[int, int, int], None]]:
-    try:
-        with Progress() as progress:
+def download(url: str, output_path: Path):
+    with Progress() as progress:
+        task = None
 
-            def _update(i, chunk_size, total_size):
-                if total_size is not None and _update.task is None:
-                    _update.task = progress.add_task('', total=total_size)
+        def _update(i, chunk_size, total_size):
+            nonlocal task
 
-                if _update.task is not None:
-                    progress.update(_update.task, advance=i * chunk_size)
+            if total_size is not None and task is None:
+                task = progress.add_task('', total=total_size)
 
-            _update.task = None
-            yield _update
-    finally:
-        pass
+            if task is not None:
+                progress.update(task, advance=i * chunk_size)
+
+        urllib.request.urlretrieve(url, output_path, reporthook=_update)
 
 
 @contextmanager
