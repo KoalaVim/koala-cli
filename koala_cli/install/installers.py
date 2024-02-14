@@ -14,7 +14,7 @@ Installer = Callable[[Console, Path], None]
 # TODO: track installed files and dir to implement uninstall after
 def install_dir(console: Console, dir: Path, base_dir: Path, output_dir: Path):
     console.print(
-        f'Installing [bright_magenta]{dir.relative_to(base_dir)} [white]in [cyan]{output_dir}'
+        f'Installing [bright_magenta]{dir.relative_to(base_dir)} [/bright_magenta]in [cyan]{output_dir}'
     )
 
 

@@ -25,6 +25,11 @@ from .installers import Installer
 
 app = typer.Typer(help="Install KoalaVim and dependencies")
 
+# Disable logging from patoolib
+import logging.config
+
+logging.config.dictConfig({'version': 1, 'disable_existing_loggers': True})
+
 
 @app.callback(invoke_without_command=True)
 def install(
@@ -199,21 +204,24 @@ def download_and_install(
     skip_download: bool,
 ):
     c = Console()
-    c.rule(style=Style(color='deep_pink3'))
+    c.rule(style=Style(color='blue3'))
 
     with temp_dir(str(base_dir / name), True, True) as download_dir:
         output_path = Path(download_dir) / Path(os.path.basename(url))
         if not skip_download:
             c.print(
-                f"[bright_magenta]Downloading [deep_pink3]{name} from [cyan]{url}[green]"
+                f"[dark_olive_green2]Downloading [deep_pink3]{name}[/deep_pink3] from [cyan]{url}"
             )
         if not dry_run:
             if not skip_download:
                 download(url, output_path)
-                c.print(f"[dark_olive_green2]Finished! placed at [yellow]{output_path}")
+                c.print(
+                    f"[dark_olive_green2]Finished! placed at [yellow]{output_path}\n"
+                )
 
             out_dir = extract_if_needed(str(output_path))
             installer(c, out_dir)
+            c.print()
 
 
 def download(url: str, output_path: Path):
