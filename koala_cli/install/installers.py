@@ -10,6 +10,7 @@ from koala_cli.utils import base_bin_dir
 
 Installer = Callable[[Console, Path], None]
 
+
 # TODO: add arg to install in different basedir
 # TODO: track installed files and dir to implement uninstall after
 def install_dir(console: Console, dir: Path, base_dir: Path, output_dir: Path):
@@ -33,3 +34,18 @@ def install_nerdfont(console: Console, in_dir: Path):
 
 def get_nerdfont() -> str:
     return "CascadiaCode.tar.xz"
+
+
+def install_fd(console: Console, in_dir: Path):
+    print(in_dir)
+    raise NotImplementedError
+
+
+def install_ripgrep(console: Console, in_dir: Path):
+    print(in_dir)
+    raise NotImplementedError
+
+
+def install_fzf(console: Console, in_dir: Path):
+    print(in_dir)
+    raise NotImplementedError

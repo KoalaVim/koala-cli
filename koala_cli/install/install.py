@@ -21,7 +21,7 @@ from rich.progress import Progress
 
 import typer
 
-from .dependencies import Os, pkgs, binaries, overrides_by_os
+from .dependencies import Os, binaries, overrides_by_os
 from .installers import Installer
 
 app = typer.Typer(help="Install KoalaVim and dependencies")
@@ -76,7 +76,11 @@ def install(
         return typer.Exit(1)
 
     if os == Os.mac:
+        # No sudo for mac
         sudo = False
+    elif os == Os.windows:
+        # Windows always install as binaries for now
+        as_binaries = True
 
     CFG = Config(os=os)
 
@@ -87,33 +91,52 @@ def install(
             random.choices(string.ascii_lowercase + string.digits, k=6)
         )
 
+    binaries_to_install = set(binaries.keys())
+
+    if not as_binaries:
+        pkg_manager = get_os_pkg_manger()
+        if pkg_manager is not None:
+            binary_pkgs = {k: v for k, v in binaries.items() if 'pkg' in v}
+            binaries_to_install = binaries_to_install - set(binary_pkgs.keys())
+
+            pkgs = [b['pkg'] for b in binary_pkgs.values()]
+            install_pkgs(pkgs, pkg_manager, sudo, dry_run)
+
     with temp_dir(dir, False, keep) as base_dir:
-        for binary in binaries:
+        for binary in binaries_to_install:
             install_binary(base_dir, binary, dry_run, skip_download_dir)
 
-    pkg_manager = get_os_pkg_manger()
-    if pkg_manager is not None:
-        install_pkgs(pkgs, pkg_manager, sudo, dry_run)
 
-
-def install_pkgs(pkg_names: List[str], pkg_manager: str, sudo: bool, dry_run: bool):
+def install_pkgs(pkgs: List[str], pkg_manager: str, sudo: bool, dry_run: bool):
     args = []
     if sudo:
         args.append("sudo")
 
-    args += [pkg_manager, "-y", *pkg_names]
+    args += [pkg_manager, "-y", *pkgs]
 
     if dry_run:
         print(" ".join(args))
+    # TODO: uncomment and test
     # subprocess.check_output()
 
 
 def install_binary(
     base_dir: Path, full_name: str, dry_run: bool, skip_download_dir: Optional[str]
 ):
+    installer = get_bin_attr(full_name, "installer", False)
+    if installer is False:
+        c = Console()
+        c.rule(style=Style(color='blue3'))
+        c.print(
+            f"[orange3]Skipping [deep_pink3]{full_name}[/deep_pink3] (no installer)"
+        )
+        return
     version = get_bin_attr(full_name, "version", "latest")
-    release = get_github_release(full_name, version=version)
-    installer = get_bin_attr(full_name, "installer")
+    if not dry_run:
+        release = get_github_release(full_name, version=version)
+    else:
+        release = "DRY-RUN"
+
     skip_download = True if skip_download_dir else False
     download_and_install(
         full_name.split('/')[1],
@@ -193,7 +216,11 @@ def get_github_release(name: str, version="latest") -> str:
 
 
 def get_bin_attr(name: str, attr: str, default: Optional[Any] = None) -> Any:
-    res = binaries[name].get(attr)
+    binary = binaries.get(name)
+    if binary is None:
+        raise ValueError(f"``{name}` doesn't exist for `{_get_os()}`")
+
+    res = binary.get(attr)
     if res is None:
         bin_os = overrides_by_os[_get_os()].get(name)
         if bin_os:

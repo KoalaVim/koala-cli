@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 
-from typing import Dict
+from typing import Dict, Optional
 from enum import Enum
 
-from .installers import get_nerdfont, install_neovim, install_nerdfont
+from .installers import (
+    get_nerdfont,
+    install_fd,
+    install_fzf,
+    install_neovim,
+    install_nerdfont,
+    install_ripgrep,
+)
 
-pkgs = [
-    "fd",
-    "ripgrep",
-    "fzf",
-    "npm",
-    # cargo?
-    # TODO: treesitter-cli https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md
-]
-
-binaries: Dict[str, Dict] = {
+Binaries = Dict[str, Dict]
+binaries: Binaries = {
     "neovim/neovim": {
         "installer": install_neovim,
         "version": "v0.9.2",
@@ -23,6 +22,23 @@ binaries: Dict[str, Dict] = {
         "format": get_nerdfont,
         "installer": install_nerdfont,
     },
+    "sharkdp/fd": {
+        "pkg": "fd",
+        "installer": install_fd,
+    },
+    "BurntSushi/ripgrep": {
+        "pkg": "ripgrep",
+        "installer": install_ripgrep,
+    },
+    "junegunn/fzf": {
+        "pkg": "fzf",
+        "installer": install_fzf,
+    },
+    "npm": {
+        "pkg": "npm",
+    },
+    # cargo?
+    # TODO: treesitter-cli https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md
 }
 
 terminals = {
@@ -60,6 +76,15 @@ overrides_by_os: Dict[Os, Dict] = {
     Os.windows: {
         "neovim/neovim": {
             "format": "win64.zip",
+        },
+        "sharkdp/fd": {
+            "format": "x86_64-pc-windows-gnu.zip",
+        },
+        "BurntSushi/ripgrep": {
+            "format": "x86_64-pc-windows-gnu.zip",
+        },
+        "junegunn/fzf": {
+            "format": "windows_amd64.zip",
         },
     },
 }
