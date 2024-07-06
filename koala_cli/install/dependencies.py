@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 from typing import Dict
+from enum import Enum
+
 from .installers import get_nerdfont, install_neovim, install_nerdfont
 
 pkgs = [
@@ -35,20 +37,27 @@ terminals = {
     },
 }
 
-overrides_by_os: Dict[str, Dict] = {
-    "linux": {
+
+class Os(str, Enum):
+    linux = "linux"
+    mac = "mac"
+    windows = "windows"
+
+
+overrides_by_os: Dict[Os, Dict] = {
+    Os.linux: {
         "apt": {},
         "neovim/neovim": {
             "format": "linux64.tar.gz",
         },
     },
-    "mac": {
+    Os.mac: {
         "brew": {},
         "neovim/neovim": {
             "format": "macos.tar.gz",
         },
     },
-    "windows": {
+    Os.windows: {
         "neovim/neovim": {
             "format": "win64.zip",
         },

@@ -10,6 +10,7 @@ import patoolib
 import string
 import random
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Iterator, Optional, List
 from typing_extensions import Annotated
@@ -20,20 +21,32 @@ from rich.progress import Progress
 
 import typer
 
-from .dependencies import pkgs, binaries, overrides_by_os
+from .dependencies import Os, pkgs, binaries, overrides_by_os
 from .installers import Installer
 
 app = typer.Typer(help="Install KoalaVim and dependencies")
 
 # Disable logging from patoolib
-import logging.config
+import logging.config  # noqa: E402
 
 logging.config.dictConfig({'version': 1, 'disable_existing_loggers': True})
+
+
+@dataclass
+class Config:
+    os: Os = None
+
+
+CFG: Config = None
 
 
 @app.callback(invoke_without_command=True)
 def install(
     dry_run: bool = False,
+    os: Annotated[
+        Os,
+        typer.Option(help="Impersonate OS (only relvant to dry_run)"),
+    ] = None,
     sudo: bool = True,
     as_binaries: Annotated[
         bool,
@@ -52,9 +65,20 @@ def install(
         ),
     ] = None,
 ):
+    global CFG
+
     if as_binaries:
         print("Not support yet, sorry :(")
         return typer.Exit(1)
+
+    if os and not dry_run:
+        print("You must pass --dry_run with --os")
+        return typer.Exit(1)
+
+    if os == Os.mac:
+        sudo = False
+
+    CFG = Config(os=os)
 
     if skip_download_dir:
         dir = skip_download_dir
@@ -105,11 +129,11 @@ def install_binary(
 # None = unavailable pkg_manager
 def get_os_pkg_manger() -> Optional[str]:
     system = _get_os()
-    if system == "linux":
+    if system == Os.linux:
         return get_linux_pkg_manager()
-    elif system == "mac":
+    elif system == Os.mac:
         return "brew"
-    elif system == "windows":
+    elif system == Os.windows:
         return get_windows_pkg_manager()
 
     return None
@@ -183,14 +207,17 @@ def get_bin_attr(name: str, attr: str, default: Optional[Any] = None) -> Any:
     return res
 
 
-def _get_os() -> str:
+def _get_os() -> Os:
+    if CFG.os:
+        return CFG.os
+
     system = platform.system()
     if system == "Linux":
-        return "linux"
+        return Os.linux
     elif system == "Darwin":
-        return "mac"
+        return Os.Mac
     elif system == "Windows":
-        return "windows"
+        return Os.windows
 
     raise ValueError(f"Invalid os={system}")
 
