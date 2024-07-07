@@ -64,6 +64,12 @@ def install(
             help="Skip the downloads and use the given directory as the downloaded directory"
         ),
     ] = None,
+    download: Annotated[
+        bool,
+        typer.Option(
+            help="Skip retrieving url downloads and the download. must be passed with --dry-run"
+        ),
+    ] = True,
 ):
     global CFG
 
@@ -73,6 +79,10 @@ def install(
 
     if os and not dry_run:
         print("You must pass --dry_run with --os")
+        return typer.Exit(1)
+
+    if not download and not dry_run:
+        print("You must pass --dry_run with --no-download")
         return typer.Exit(1)
 
     if os == Os.mac:
@@ -104,7 +114,7 @@ def install(
 
     with temp_dir(dir, False, keep) as base_dir:
         for binary in binaries_to_install:
-            install_binary(base_dir, binary, dry_run, skip_download_dir)
+            install_binary(base_dir, binary, dry_run, download, skip_download_dir)
 
 
 def install_pkgs(pkgs: List[str], pkg_manager: str, sudo: bool, dry_run: bool):
@@ -121,7 +131,11 @@ def install_pkgs(pkgs: List[str], pkg_manager: str, sudo: bool, dry_run: bool):
 
 
 def install_binary(
-    base_dir: Path, full_name: str, dry_run: bool, skip_download_dir: Optional[str]
+    base_dir: Path,
+    full_name: str,
+    dry_run: bool,
+    download: bool,
+    skip_download_dir: Optional[str],
 ):
     installer = get_bin_attr(full_name, "installer", False)
     if installer is False:
@@ -132,10 +146,10 @@ def install_binary(
         )
         return
     version = get_bin_attr(full_name, "version", "latest")
-    if not dry_run:
+    if download:
         release = get_github_release(full_name, version=version)
     else:
-        release = "DRY-RUN"
+        release = "NO-DOWNLOAD"
 
     skip_download = True if skip_download_dir else False
     download_and_install(
