@@ -36,6 +36,7 @@ def get_nerdfont() -> str:
     return "CascadiaCode.tar.xz"
 
 
+# TODO: [windows install] implement installers
 def install_fd(console: Console, in_dir: Path):
     print(in_dir)
     raise NotImplementedError
