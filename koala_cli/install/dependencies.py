@@ -66,6 +66,15 @@ overrides_by_os: Dict[Os, Dict] = {
         "neovim/neovim": {
             "format": "linux64.tar.gz",
         },
+        "sharkdp/fd": {
+            "format": "x86_64-unknown-linux-gnu.tar.gz",
+        },
+        "BurntSushi/ripgrep": {
+            "format": "x86_64-unknown-linux-musl.tar.gz",
+        },
+        "junegunn/fzf": {
+            "format": "linux_amd64.tar.gz",
+        },
     },
     Os.mac: {
         "brew": {},
