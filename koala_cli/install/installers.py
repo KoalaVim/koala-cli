@@ -19,17 +19,26 @@ def install_dir(console: Console, dir: Path, base_dir: Path, output_dir: Path):
     )
 
 
-def install_dirs(console: Console, dirs: List[str], base_dir: Path, output_dir: Path):
-    [install_dir(console, Path(dir), base_dir, output_dir) for dir in dirs]
+def install_dirs(
+    console: Console,
+    dirs: List[str],
+    parent_dir: Path,
+    output_dir: Path,
+    debug=False,
+):
+    if debug:
+        print(f'{parent_dir=} {dirs=}')
+    [install_dir(console, Path(dir), parent_dir, output_dir) for dir in dirs]
 
 
-def install_neovim(console: Console, in_dir: Path):
-    base_dir = Path(in_dir / 'nvim-linux64')
-    install_dirs(console, glob.glob(str(base_dir / "*")), base_dir, base_bin_dir())
+def install_neovim(console: Console, parent_dir: Path):
+    parent_dir = Path(parent_dir / 'nvim-linux64')
+    install_dirs(console, glob.glob(str(parent_dir / "*")), parent_dir, base_bin_dir())
 
 
-def install_nerdfont(console: Console, in_dir: Path):
-    print(f"install nerdfont {in_dir}")
+def install_nerdfont(console: Console, parent_dir: Path):
+    # TODO: impl
+    print(f"install nerdfont {parent_dir}")
 
 
 def get_nerdfont() -> str:
@@ -37,16 +46,19 @@ def get_nerdfont() -> str:
 
 
 # TODO: [windows install] implement installers
-def install_fd(console: Console, in_dir: Path):
-    print(in_dir)
-    raise NotImplementedError
+def install_fd(console: Console, parent_dir: Path):
+    install_dirs(
+        console,
+        glob.glob(str(parent_dir / "fd-*" / "fd")),
+        parent_dir,
+        base_bin_dir() / 'bin',
+        debug=True,
+    )
 
 
-def install_ripgrep(console: Console, in_dir: Path):
-    print(in_dir)
-    raise NotImplementedError
+def install_ripgrep(console: Console, parent_dir: Path):
+    print(parent_dir)
 
 
-def install_fzf(console: Console, in_dir: Path):
-    print(in_dir)
-    raise NotImplementedError
+def install_fzf(console: Console, parent_dir: Path):
+    print(parent_dir)
