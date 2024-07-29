@@ -9,6 +9,7 @@ import os
 import patoolib
 import string
 import random
+import glob
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -96,6 +97,7 @@ def install(
 
     if skip_download_dir:
         dir = skip_download_dir
+        download = False
     else:
         dir = 'koala_' + ''.join(
             random.choices(string.ascii_lowercase + string.digits, k=6)
@@ -145,20 +147,34 @@ def install_binary(
             f"[orange3]Skipping [deep_pink3]{full_name}[/deep_pink3] (no installer)"
         )
         return
+
+    # Take the second part of github/shorthand
+    folder_name = full_name.split('/')[1]
+
     version = get_bin_attr(full_name, "version", "latest")
     if download:
         release = get_github_release(full_name, version=version)
     else:
         release = "NO-DOWNLOAD"
+        try:
+            extracted_folder = str(
+                base_dir / folder_name / f'{folder_name}*_extracted/'
+            )
+            out_dir = glob.glob(extracted_folder)[0]
+        except IndexError:
+            out_dir = ""
+
+        out_dir = Path(out_dir)
 
     skip_download = True if skip_download_dir else False
     download_and_install(
-        full_name.split('/')[1],
+        folder_name,
         base_dir,
         release,
         installer,
         dry_run,
         skip_download,
+        out_dir=out_dir,
     )
     return
 
@@ -270,6 +286,7 @@ def download_and_install(
     installer: Installer,
     dry_run: bool,
     skip_download: bool,
+    out_dir: Optional[Path] = None,
 ):
     c = Console()
     c.rule(style=Style(color='blue3'))
@@ -287,7 +304,8 @@ def download_and_install(
                     f"[dark_olive_green2]Finished! placed at [yellow]{output_path}\n"
                 )
 
-            out_dir = extract_if_needed(str(output_path))
+            if out_dir is None:
+                out_dir = extract_if_needed(str(output_path))
             installer(c, out_dir)
             c.print()
 
