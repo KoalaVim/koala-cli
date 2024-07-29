@@ -157,9 +157,7 @@ def install_binary(
     else:
         release = "NO-DOWNLOAD"
         try:
-            extracted_folder = str(
-                base_dir / folder_name / f'{folder_name}*_extracted/'
-            )
+            extracted_folder = str(base_dir / folder_name / '*_extracted/')
             out_dir = glob.glob(extracted_folder)[0]
         except IndexError:
             out_dir = ""
