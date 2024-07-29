@@ -33,7 +33,12 @@ def install_dirs(
 
 def install_neovim(console: Console, parent_dir: Path):
     parent_dir = Path(parent_dir / 'nvim-linux64')
-    install_dirs(console, glob.glob(str(parent_dir / "*")), parent_dir, base_bin_dir())
+    install_dirs(
+        console,
+        glob.glob(str(parent_dir / "*")),
+        parent_dir,
+        base_bin_dir(),
+    )
 
 
 def install_nerdfont(console: Console, parent_dir: Path):
@@ -52,12 +57,16 @@ def install_fd(console: Console, parent_dir: Path):
         glob.glob(str(parent_dir / "fd-*" / "fd")),
         parent_dir,
         base_bin_dir() / 'bin',
-        debug=True,
     )
 
 
 def install_ripgrep(console: Console, parent_dir: Path):
-    print(parent_dir)
+    install_dirs(
+        console,
+        glob.glob(str(parent_dir / "ripgrep-*" / "rg")),
+        parent_dir,
+        base_bin_dir() / 'bin',
+    )
 
 
 def install_fzf(console: Console, parent_dir: Path):
