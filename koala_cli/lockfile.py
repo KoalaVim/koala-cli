@@ -51,14 +51,6 @@ def overwrite(yes: Yes = False):
     return _lazy_restore()
 
 
-@app.command()
-def set_koalavim(yes: Yes = False):
-    """
-    Overwrite Koala's lock-file with user lockfile (used by devs)
-    """
-    _overwrite_lock_file(user_lockfile(), kvim_lockfile(), yes)
-
-
 def _overwrite_lock_file(src, dst, yes=False):
     if not yes and not Confirm.ask(f"Confirm overwrite of '{dst}'"):
         return
